@@ -57,6 +57,7 @@ async def create_wallet(payload:WalletCreate,db:DBSession):
         
     return {'wallet':address.address,'mnemonics':mnemonics,'keypair':keypair}
 
+#NOTE -  Working
 app.post('/get-balance/{address}',status_code=status.HTTP_200_OK,response_model=dict)
 async def get_balance(address:str):
     ...
