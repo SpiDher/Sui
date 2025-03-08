@@ -92,7 +92,8 @@ async def buy_airtime(phone_no:str,amount:str,network:str):
     "MobileNumber": phone_no,
     "CallBackURL": "https://cypher-85fk.onrender.com/callback"
     }
-    response = request.
+    response = requests.get(BILL_URL,params=params)
+    return response.json()
 
 @app.get('/payment-result',status_code=status.HTTP_200_OK,response_model=dict)
 async def  payment_result():
