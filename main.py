@@ -18,6 +18,9 @@ from pysui.sui.sui_crypto import SuiKeyPair,create_new_address
 async def lifespan(app:FastAPI):
     async with engine.begin() as conn:
         conn.run_sync(Base.metadata.create_all)
+        
+    yield
+    
 app = FastAPI(lifespan=lifespan,title='Sheda Solutions Backend',version='0.1.0',docs_url='/',description='Backend for SUI Hack')
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
