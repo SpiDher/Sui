@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from db import get_db,Base,engine
 from models import BaseUser
 from contextlib import asynccontextmanager
+from sqlalchemy.exc import IntegrityError
 from pysui.sui.sui_crypto import SuiKeyPair,create_new_address
 
 
@@ -45,9 +46,15 @@ async def create_wallet(payload:WalletCreate,db:DBSession):
     wallet = create_new_address(word_counts=12,keytype=SignatureScheme.ED25519)
     mnemonics,keypair,address = wallet
     new_user = BaseUser(**payload.model_dump())
-    db.add(new_user)
-    await db.commit()
-    await db.refresh(new_user)
+    try:
+        db.add(new_user)
+        await db.commit()
+        await db.refresh(new_user)
+    except IntegrityError:
+        raise HTTPException(status_code= status.HTTP_409_CONFLICT,detail='user exists')
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY,detial=str(e))
+        
     return {'wallet':address.address,'mnemonics':mnemonics,'keypair':keypair}
 
 app.post('/get-balance/{address}',status_code=status.HTTP_200_OK,response_model=dict)

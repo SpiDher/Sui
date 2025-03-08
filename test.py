@@ -9,7 +9,9 @@ first,key,third = wallet
 # client = SyncGqlClient()
 address = '0xd5db541629460f17db406d6c1222190d3d0d16634d57fc0b6f5fcc15eb49228c'
 
-
+ed_mnemonics, ed_address = config.create_new_keypair_and_address(scheme=SignatureScheme.ED25519)
 # balances = client.
-print(third)
-print(key.private_key.to_b64())
+wallet = config.create_new_keypair_and_address(scheme=SignatureScheme.ED25519)
+
+print(ed_mnemonics)
+print(ed_address)

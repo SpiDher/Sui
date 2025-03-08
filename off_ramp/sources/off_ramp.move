@@ -10,7 +10,7 @@ module off_ramp::off_ramp;
 module off_ramp::OffRamp {
     use sui::event;
     use sui::clock::{Clock, timestamp_ms};
-    //use sui::clock;
+
     
 
     // One-time witness for initialization
@@ -23,6 +23,7 @@ module off_ramp::OffRamp {
         sender: address,
         amount: u64,
         timestamp: u64,
+        withdrawn:bool,
     }
 
     // Event to track deposits
@@ -30,6 +31,7 @@ module off_ramp::OffRamp {
         sender: address,
         amount: u64,
         timestamp: u64,
+        withdrawn:bool,
     }
 
     // Storage for all deposits
@@ -57,18 +59,18 @@ module off_ramp::OffRamp {
     // Function to deposit SUI
     public entry fun deposit_sui(storage: &mut DepositStorage, sender: address, clock: &Clock, amount: u64, ctx: &mut tx_context::TxContext) {
         let timestamp = timestamp_ms(clock);
-        let deposit = Deposit { id:object::new(ctx), sender, amount, timestamp };
+        let withdrawn = false;
+        let deposit = Deposit { id:object::new(ctx), sender, amount, timestamp, withdrawn };
         vector::push_back(&mut storage.deposits, deposit);
 
         // Emit event for tracking
-        event::emit(DepositEvent { sender, amount, timestamp });
+        event::emit(DepositEvent { sender, amount, timestamp,withdrawn });
     }
 
     // Admin withdrawal function
     public entry fun withdraw_sui(storage: &mut DepositStorage, admin: address, amount: u64, ctx: &mut tx_context::TxContext) {
         assert!(admin == storage.admin, 1001); // 1001 is an error code for unauthorized access
         
-        // Transfer SUI (use a function that actually transfers assets, as transfer_sui() is unbound)
-        transfer::public_transfer(amount,tx_context::sender(ctx))
+        
     }
 }
