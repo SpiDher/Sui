@@ -76,7 +76,7 @@ async def get_balance(address:str):
 @app.post('/check-username/{username}',status_code=status.HTTP_200_OK,response_model=dict)
 async  def check_username(username:str,db:DBSession):
     query = select(BaseUser).where(BaseUser.username == username)
-    result:Result = db.execute(query)
+    result:Result = await db.execute(query)
     username = result.scalars().first()
     if username:
         return {'exists':True}
