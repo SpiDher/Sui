@@ -42,7 +42,7 @@ def hash_pin(pwd:Any):
 
 class WalletCreate(BaseModel):
     username: str
-    pin:Annotated[str,BeforeValidator(hash_pin),Field(max_length=4)]
+    pin:Annotated[str,BeforeValidator(hash_pin)]
     
     class Config:
         from_attributes = True
@@ -69,11 +69,11 @@ async def create_wallet(payload:WalletCreate,db:DBSession):
     return {'wallet':address.address,'mnemonics':mnemonics,'keypair':keypair.private_key.to_b64()}
 
 #NOTE -  Working
-@app.post('/get-balance/{address}',status_code=status.HTTP_200_OK,response_model=dict)
+@app.get('/get-balance/{address}',status_code=status.HTTP_200_OK,response_model=dict)
 async def get_balance(address:str):
     ...
     
-@app.get('/check-username/{username}',status_code=status.HTTP_200_OK,response_model=dict)
+@app.post('/check-username/{username}',status_code=status.HTTP_200_OK,response_model=dict)
 async  def check_username(username:str,db:DBSession):
     query = select(BaseUser).where(BaseUser.username == username)
     result:Result = db.execute(query)
@@ -92,6 +92,7 @@ async def buy_airtime(phone_no:str,amount:str,network:str):
     "MobileNumber": phone_no,
     "CallBackURL": "https://cypher-85fk.onrender.com/callback"
     }
+    response = request.
 
 @app.get('/payment-result',status_code=status.HTTP_200_OK,response_model=dict)
 async def  payment_result():
