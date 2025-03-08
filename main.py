@@ -10,7 +10,7 @@ from models import BaseUser
 from contextlib import asynccontextmanager
 from sqlalchemy.exc import IntegrityError
 from pysui.sui.sui_crypto import SuiKeyPair,create_new_address
-
+import requests
 
 
 
