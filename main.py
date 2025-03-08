@@ -22,7 +22,7 @@ app = FastAPI(lifespan=lifespan,title='Sheda Solutions Backend',version='0.1.0',
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-config = SuiConfig.default_config()
+config = SuiConfig.user_config(rpc_url='https://sui-testnet-endpoint.blockvision.org')
 
 
         
