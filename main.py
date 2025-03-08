@@ -64,9 +64,9 @@ async def create_wallet(payload:WalletCreate,db:DBSession):
     except IntegrityError:
         raise HTTPException(status_code= status.HTTP_409_CONFLICT,detail='user exists')
     except Exception as e:
-        raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY,detial=str(e))
+        raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY,detail=str(e))
         
-    return {'wallet':address.address,'mnemonics':mnemonics,'keypair':keypair.private_key.to_b64()}
+    return {'wallet':address.address,'mnemonics':mnemonics,'private_key':keypair.private_key.to_b64()}
 
 #NOTE -  Working
 @app.get('/get-balance/{address}',status_code=status.HTTP_200_OK,response_model=dict)
