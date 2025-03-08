@@ -6,13 +6,17 @@ import os
 load_dotenv()
 
 debug_mode = os.getenv('DEBUG')  == 'True'
+
 prod_db = os.getenv('DB_URL')
-db_url = "sqlite+aiosqlite:///./database.db" if debug_mode else prod_db
+
+db_url =  prod_db
 
 
-db_url = db_url.replace("postgresql://", "postgresql+asyncpg://") if db_url.startswith("postgresql://") else db_url
+db_url = db_url.replace("postgresql://", "postgresql+asyncpg://") if prod_db and prod_db.startswith("postgresql://") else db_url
+
+db_url = "sqlite+aiosqlite:///./database.db"
 connect_args = {}  # No special args for PostgreSQL
-    
+
 
 
 engine = create_async_engine(url=db_url,connect_args=connect_args)
