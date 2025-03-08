@@ -17,6 +17,9 @@ from dotenv import load_dotenv
 import os
 import aiofiles
 import json
+from pysui.sui.sui_clients.sync_client import SuiClient
+from pysui.sui.sui_builders.get_builders import GetCoins
+#from pysui.sui.sui_types.scalars import SuiAddress
 load_dotenv()
 
 @asynccontextmanager
@@ -30,8 +33,8 @@ app = FastAPI(lifespan=lifespan,title='Sheda Solutions Backend',version='0.1.0',
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-config = SuiConfig.user_config(rpc_url='https://sui-testnet-endpoint.blockvision.org')
-
+config = SuiConfig.user_config(rpc_url=' https://fullnode.mainnet.sui.io:443')
+client = SuiClient(config=config)
 BILL_URL = 'https://www.nellobytesystems.com/APICancelV1.asp'
 
 API_KEY = os.getenv('API_KEY')
@@ -71,7 +74,14 @@ async def create_wallet(payload:WalletCreate,db:DBSession):
 #NOTE -  Working
 @app.get('/get-balance/{address}',status_code=status.HTTP_200_OK,response_model=dict)
 async def get_balance(address:str):
-    ...
+    coins_response = client.execute(GetCoins(owner=address))
+    if coins_response.is_ok():
+        coins = coins_response.result_data
+        '''total_balance = sum(coin.balance for coin in coins)
+        print(f"Total balance: {total_balance} SUI")'''
+        return {'balance':str(coins)}
+    else:
+        print(f"Error fetching balance: {coins_response.result_string}")
     
 @app.post('/check-username/{username}',status_code=status.HTTP_200_OK,response_model=dict)
 async  def check_username(username:str,db:DBSession):
