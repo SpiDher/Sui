@@ -149,7 +149,7 @@ data = {
 def fetch_data():
     return data
 
-@app.post('/login',response_model=dict,status_code = status.HTTP_200_OK)
+@app.post('/login',response_model=WalletCreate,status_code = status.HTTP_200_OK)
 async def login(username:str,pin:str,db:DBSession):
     query = select(BaseUser).where(BaseUser.username == username)
     result:Result = await db.execute(query)
@@ -157,7 +157,7 @@ async def login(username:str,pin:str,db:DBSession):
     if user:
         verify = pwd_context.verify(pin,user.pin)
         if verify:
-            return {'user':user}
+            return user
     raise HTTPException(status_code =status.HTTP_401_UNAUTHORIZED,detail='User not found')
         
     
