@@ -77,10 +77,10 @@ async def create_wallet(payload:WalletCreate,db:DBSession):
 async def get_balance(address:str):
     coins_response = client.execute(GetCoins(owner=address))
     if coins_response.is_ok():
-        coins = coins_response.result_data
-        '''total_balance = sum(coin.balance for coin in coins)
-        print(f"Total balance: {total_balance} SUI")'''
-        return {'balance':str(coins)}
+        coins = coins_response.result_data.data
+        total_balance = sum(int(coin.balance) for coin in coins)
+        print(f"Total balance: {total_balance} SUI")
+        return {'balance':str(total_balance)}
     else:
         print(f"Error fetching balance: {coins_response.result_string}")
     
