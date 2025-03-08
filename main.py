@@ -33,7 +33,7 @@ app = FastAPI(lifespan=lifespan,title='Sheda Solutions Backend',version='0.1.0',
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-config = SuiConfig.user_config(rpc_url=' https://fullnode.mainnet.sui.io:443')
+config = SuiConfig.user_config(rpc_url='https://fullnode.mainnet.sui.io:443')
 client = SuiClient(config=config)
 BILL_URL = 'https://www.nellobytesystems.com/APICancelV1.asp'
 
@@ -59,7 +59,7 @@ async def create_wallet(payload:WalletCreate,db:DBSession):
     #keypair = gen_mnemonic_phrase(12)
     wallet = create_new_address(word_counts=12,keytype=SignatureScheme.ED25519)
     mnemonics,keypair,address = wallet
-    new_user = BaseUser(**payload.model_dump())
+    new_user = BaseUser(**payload.model_dump(),address= address.adress)
     try:
         db.add(new_user)
         await db.commit()
@@ -87,9 +87,9 @@ async def get_balance(address:str):
 async  def check_username(username:str,db:DBSession):
     query = select(BaseUser).where(BaseUser.username == username)
     result:Result = await db.execute(query)
-    username = result.scalars().first()
-    if username:
-        return {'exists':True}
+    user = result.scalars().first()
+    if user:
+        return {'user':user}
     raise HTTPException(status_code = status.HTTP_404_NOT_FOUND,detail='Not found')
 
 @app.post('/buy-airtime',status_code=status.HTTP_200_OK,response_model=dict)
@@ -147,5 +147,18 @@ data = {
 @app.get("/fetch-data")
 def fetch_data():
     return data
+
+@app.post('/login',response_model=dict,status_code = status.HTTP_200_OK)
+async def login(username:str,pin:str,db:DBSession):
+    query = select(BaseUser).where(BaseUser.username == username)
+    result:Result = await db.execute(query)
+    user = result.scalars().first()
+    if user:
+        verify = pwd_context.verify(pin,user.pin)
+        if verify:
+            return {'user':user}
+    raise HTTPException(status_code =status.HTTP_401_UNAUTHORIZED,detail='User not found')
+        
+    
 
             
