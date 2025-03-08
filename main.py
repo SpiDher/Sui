@@ -1,6 +1,6 @@
 from fastapi import FastAPI,HTTPException,status,Depends
 from pydantic import BaseModel,BeforeValidator,Field
-from typing import Annotated,Any
+from typing import Annotated,Any,Optional
 from pysui.abstracts.client_keypair import SignatureScheme
 from pysui.sui.sui_config import SuiConfig
 from passlib.context import CryptContext
@@ -46,6 +46,7 @@ def hash_pin(pwd:Any):
 class WalletCreate(BaseModel):
     username: str
     pin:Annotated[str,BeforeValidator(hash_pin)]
+    address:Optional[str] = None
     
     class Config:
         from_attributes = True
@@ -83,13 +84,13 @@ async def get_balance(address:str):
     else:
         print(f"Error fetching balance: {coins_response.result_string}")
     
-@app.post('/check-username/{username}',status_code=status.HTTP_200_OK,response_model=dict)
+@app.post('/check-username/{username}',status_code=status.HTTP_200_OK,response_model=WalletCreate)
 async  def check_username(username:str,db:DBSession):
     query = select(BaseUser).where(BaseUser.username == username)
     result:Result = await db.execute(query)
     user = result.scalars().first()
     if user:
-        return {'user':user}
+        return user
     raise HTTPException(status_code = status.HTTP_404_NOT_FOUND,detail='Not found')
 
 @app.post('/buy-airtime',status_code=status.HTTP_200_OK,response_model=dict)
