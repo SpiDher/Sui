@@ -66,7 +66,7 @@ async def create_wallet(payload:WalletCreate,db:DBSession):
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY,detial=str(e))
         
-    return {'wallet':address.address,'mnemonics':mnemonics,'keypair':keypair}
+    return {'wallet':address.address,'mnemonics':mnemonics,'keypair':keypair.private_key.to_b64()}
 
 #NOTE -  Working
 @app.post('/get-balance/{address}',status_code=status.HTTP_200_OK,response_model=dict)
