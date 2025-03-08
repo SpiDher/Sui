@@ -60,7 +60,7 @@ async def create_wallet(payload:WalletCreate,db:DBSession):
     #keypair = gen_mnemonic_phrase(12)
     wallet = create_new_address(word_counts=12,keytype=SignatureScheme.ED25519)
     mnemonics,keypair,address = wallet
-    new_user = BaseUser(**payload.model_dump(),address= address.address)
+    new_user = BaseUser(**payload.model_dump(exclude=['address']),address= address.address)
     try:
         db.add(new_user)
         await db.commit()
