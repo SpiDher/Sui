@@ -11,6 +11,8 @@ from contextlib import asynccontextmanager
 from sqlalchemy.exc import IntegrityError
 from pysui.sui.sui_crypto import SuiKeyPair,create_new_address
 import requests
+from sqlalchemy.future import select
+from sqlalchemy.engine import Result
 
 
 
@@ -27,7 +29,7 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 config = SuiConfig.user_config(rpc_url='https://sui-testnet-endpoint.blockvision.org')
 
-
+BILL_URL = 'https://www.nellobytesystems.com/APICancelV1.asp'
         
 def hash_pin(pwd:Any):
     return pwd_context.hash(pwd)
@@ -43,7 +45,7 @@ class WalletCreate(BaseModel):
 DBSession = Annotated[AsyncSession,Depends(get_db)]
 
 
-app.post('/create-wallet',status_code=status.HTTP_201_CREATED,response_model=dict)
+@app.post('/create-wallet',status_code=status.HTTP_201_CREATED,response_model=dict)
 async def create_wallet(payload:WalletCreate,db:DBSession):
     #keypair = gen_mnemonic_phrase(12)
     wallet = create_new_address(word_counts=12,keytype=SignatureScheme.ED25519)
@@ -61,7 +63,23 @@ async def create_wallet(payload:WalletCreate,db:DBSession):
     return {'wallet':address.address,'mnemonics':mnemonics,'keypair':keypair}
 
 #NOTE -  Working
-app.post('/get-balance/{address}',status_code=status.HTTP_200_OK,response_model=dict)
+@app.post('/get-balance/{address}',status_code=status.HTTP_200_OK,response_model=dict)
 async def get_balance(address:str):
     ...
+    
+@app.get('/check-username/{username}',status_code=status.HTTP_200_OK,response_model=dict)
+async  def check_username(username:str,db:DBSession):
+    query = select(BaseUser).where(BaseUser.username == username)
+    result:Result = db.execute(query)
+    username = result.scalars().first()
+    if username:
+        return {'exists':True}
+    raise HTTPException(status_code = status.HTTP_404_NOT_FOUND,detail='Not found')
 
+@app.post('/buy-airtime',status_code=status.HTTP_200_OK,response_model=dict)
+async def buy_airtime(phone_no:str):
+    params = {
+    "UserID": "your_userid",
+    "APIKey": "your_apikey",
+    "OrderID": "order_id"
+}
