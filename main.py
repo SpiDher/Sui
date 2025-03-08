@@ -1,5 +1,5 @@
 from fastapi import FastAPI,HTTPException,status,Depends
-from pydantic import BaseModel,BeforeValidator 
+from pydantic import BaseModel,BeforeValidator,Field
 from typing import Annotated,Any
 from pysui.abstracts.client_keypair import SignatureScheme
 from pysui.sui.sui_config import SuiConfig
@@ -13,8 +13,11 @@ from pysui.sui.sui_crypto import SuiKeyPair,create_new_address
 import requests
 from sqlalchemy.future import select
 from sqlalchemy.engine import Result
-
-
+from dotenv import load_dotenv
+import os
+import aiofiles
+import json
+load_dotenv()
 
 @asynccontextmanager
 async def lifespan(app:FastAPI):
@@ -30,13 +33,16 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 config = SuiConfig.user_config(rpc_url='https://sui-testnet-endpoint.blockvision.org')
 
 BILL_URL = 'https://www.nellobytesystems.com/APICancelV1.asp'
+
+API_KEY = os.getenv('API_KEY')
+BASE_DIR = os.path.join(os.getcwd())
         
 def hash_pin(pwd:Any):
     return pwd_context.hash(pwd)
 
 class WalletCreate(BaseModel):
     username: str
-    pin:Annotated[str,BeforeValidator(hash_pin)]
+    pin:Annotated[str,BeforeValidator(hash_pin),Field(max_length=4)]
     
     class Config:
         from_attributes = True
@@ -77,9 +83,57 @@ async  def check_username(username:str,db:DBSession):
     raise HTTPException(status_code = status.HTTP_404_NOT_FOUND,detail='Not found')
 
 @app.post('/buy-airtime',status_code=status.HTTP_200_OK,response_model=dict)
-async def buy_airtime(phone_no:str):
+async def buy_airtime(phone_no:str,amount:str,network:str):
     params = {
-    "UserID": "your_userid",
-    "APIKey": "your_apikey",
-    "OrderID": "order_id"
+    "UserID": "Penivera",
+    "APIKey": API_KEY,
+    "MobileNetwork": network,
+    "Amount": amount,
+    "MobileNumber": phone_no,
+    "CallBackURL": "https://cypher-85fk.onrender.com/callback"
+    }
+
+@app.get('/payment-result',status_code=status.HTTP_200_OK,response_model=dict)
+async def  payment_result():
+    async with aiofiles.open(os.path.join(BASE_DIR,'data.json'),'r') as file:
+        data = json.loads(await file.read())    
+    return data
+
+@app.post('/callback', status_code=status.HTTP_200_OK)
+async def save_data(data: dict):
+    if data:
+        file_path = os.path.join(BASE_DIR, 'data.json')
+        async with aiofiles.open(file_path, 'w') as file:
+            await file.write(json.dumps(data, indent=4))  # Properly serialize data
+    return {"message": "Data saved successfully"}
+
+
+data = {
+    "MOBILE_NETWORK": {
+        "MTN": [
+            {
+                "ID": "01",
+                "PRODUCT": [
+                    {"PRODUCT_CODE": "2", "PRODUCT_ID": "500.0", "PRODUCT_NAME": "500 MB - 30 days (SME)", "PRODUCT_AMOUNT": "337"},
+                    {"PRODUCT_CODE": "4", "PRODUCT_ID": "1000.0", "PRODUCT_NAME": "1 GB - 30 days (SME)", "PRODUCT_AMOUNT": "673"},
+                    {"PRODUCT_CODE": "5", "PRODUCT_ID": "2000.0", "PRODUCT_NAME": "2 GB - 30 days (SME)", "PRODUCT_AMOUNT": "1346"}
+                ]
+            }
+        ],
+        "Glo": [
+            {
+                "ID": "02",
+                "PRODUCT": [
+                    {"PRODUCT_CODE": "1", "PRODUCT_ID": "200", "PRODUCT_NAME": "200 MB - 14 days (SME)", "PRODUCT_AMOUNT": "92"},
+                    {"PRODUCT_CODE": "2", "PRODUCT_ID": "500", "PRODUCT_NAME": "500 MB - 30 days (SME)", "PRODUCT_AMOUNT": "225"}
+                ]
+            }
+        ]
+    }
 }
+
+@app.get("/fetch-data")
+def fetch_data():
+    return data
+
+            
